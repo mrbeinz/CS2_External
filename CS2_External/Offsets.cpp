@@ -2,17 +2,19 @@
 #include "Game.h"
 #include "Utils/ProcessManager.hpp"
 
-namespace Offsets {
-    uint64_t dwEntityList = 0x271A908;
-    uint64_t dwLocalPlayerController = 0x253CB78;
-    uint64_t dwViewMatrix = 0x256B020;
-    uint64_t dwViewAngles = 0x257BCC8;
-    uint64_t dwGlobalVars = 0x2230090;
-    uint64_t dwPlantedC4 = 0x24CB3C0;
-    uint64_t dwWeaponC4 = 0x24C9B30;
+namespace Offset {
+    // Hardcoded from your dumper to bypass pattern scanning failures
+    DWORD64 dwEntityList = 0x271A908;
+    DWORD64 dwLocalPlayerController = 0x253CB78;
+    DWORD64 dwViewMatrix = 0x256B020;
+    DWORD64 dwViewAngles = 0x257BCC8;
+    DWORD64 dwGlobalVars = 0x2230090;
+    DWORD64 dwPlantedC4 = 0x24CB3C0;
+    DWORD64 dwWeaponC4 = 0x24C9B30;
 
-    void Initialize() {
-        // Values are hardcoded above based on the latest dump.
-        // If the game updates, update the hex values above.
+    bool UpdateOffsets() {
+        // Values are hardcoded above.
+        // Return true so main.cpp knows initialization succeeded.
+        return true;
     }
 }
