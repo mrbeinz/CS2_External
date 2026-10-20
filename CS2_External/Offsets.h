@@ -4,6 +4,7 @@
 #include "Utils/ProcessManager.hpp"
 
 namespace Offset {
+    // Global Addresses
     extern DWORD64 EntityList;
     extern DWORD64 Matrix;
     extern DWORD64 LocalPlayerController;
@@ -12,9 +13,11 @@ namespace Offset {
     extern DWORD64 ForceJump;
     extern DWORD64 GlobalVars;
     extern DWORD64 Sensitivity;
+    extern DWORD64 Sensitivity_Value; // AimBot.hpp needs this
     extern DWORD64 PlantedC4;
     extern DWORD64 WeaponC4;
 
+    // GlobalVars Sub-Offsets
     struct GlobalVarOffsets {
         DWORD64 RealTime = 0x0;
         DWORD64 FrameCount = 0x4;
@@ -26,6 +29,7 @@ namespace Offset {
     };
     extern GlobalVarOffsets GlobalVar;
 
+    // Entity (Player Controller) Offsets
     struct EntityOffsets {
         DWORD64 m_iHealth = 0x34C;
         DWORD64 m_iTeamNum = 0x3E7;
@@ -37,6 +41,7 @@ namespace Offset {
     };
     extern EntityOffsets Entity;
 
+    // Pawn Offsets
     struct PawnOffsets {
         DWORD64 m_iHealth = 0x34C;
         DWORD64 m_iTeamNum = 0x3E7;
@@ -52,9 +57,12 @@ namespace Offset {
         DWORD64 m_flFlashDuration = 0x1510;
         DWORD64 m_iIDEntIndex = 0x13A4;
         DWORD64 m_flFOVSensitivityAdjust = 0x1520;
+        DWORD64 m_pGameSceneNode = 0x330; // Bone.cpp needs this
+        DWORD64 BoneArray = 0x1C0; // Bone.cpp needs this (0x140 + 0x80)
     };
     extern PawnOffsets Pawn;
 
+    // Weapon Offsets
     struct WeaponOffsets {
         DWORD64 m_hActiveWeapon = 0x60;
         DWORD64 m_nSubclassID = 0x0; 
@@ -62,6 +70,7 @@ namespace Offset {
     };
     extern WeaponOffsets Weapon;
 
+    // 3-argument template
     template <typename T>
     bool GetDataAddressWithOffset(DWORD64 address, DWORD64 offset, T& out) {
         return ReadProcessMemory(ProcessMgr.hProcess, (LPCVOID)(address + offset), &out, sizeof(T), nullptr);
