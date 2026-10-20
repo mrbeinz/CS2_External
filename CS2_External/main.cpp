@@ -21,12 +21,12 @@ int main()
 	MenuConfig::path = documentsPath;
 	MenuConfig::path += "/CS2_External";
 
-	if (ProcessStatus != StatusCode::SUCCEED)
-	{
-		std::cout << "[ERROR] Failed to attach process, StatusCode:" << ProcessStatus << std::endl;
-		goto END;
-	}
-
+	    if (ProcessMgr.Attach("cs2.exe") != SUCCEED)
+    {
+        std::cout << "Failed to attach to cs2.exe" << std::endl;
+        return 1;
+    }
+	
 	if (!Offset::UpdateOffsets())
 	{
 		std::cout << "[ERROR] Failed to update offsets." << std::endl;
