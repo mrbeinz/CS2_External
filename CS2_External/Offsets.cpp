@@ -20,7 +20,7 @@ DWORD64 SearchOffsets(std::string Signature, DWORD64 ModuleAddress)
 
 bool Offset::UpdateOffsets()
 {
-	DWORD64 ClientDLL = reinterpret_cast<DWORD64>(ProcessMgr.GetProcessModuleHandle("client.dll"));
+	DWORD64 ClientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
 	if (ClientDLL == 0)
 		return false;
 	
