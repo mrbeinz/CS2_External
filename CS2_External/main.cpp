@@ -1,81 +1,79 @@
-#include "Offsets.h"
-#include "Cheats.h"
-#include "Utils/Format.hpp"
 #include <iostream>
-#include <iomanip>
-#include <filesystem>
-#include <cstdlib>
-#include <KnownFolders.h>
-#include <ShlObj.h>
+#include <Windows.h>
+#include <thread>
 
-namespace fs = std::filesystem;
+#include "Cheats.h"
+#include "OS-ImGui/OS-ImGui.h"
+#include "Utils/ProcessManager.hpp"
+#include "Offsets.h"
 
 int main()
 {
-	auto ProcessStatus = ProcessMgr.Attach("cs2.exe");
-	char documentsPath[MAX_PATH];
-	if (SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, documentsPath) != S_OK) {
-		std::cerr << "Failed to get the Documents folder path." << std::endl;
-		goto END;
-	}
-	MenuConfig::path = documentsPath;
-	MenuConfig::path += "/CS2_External";
+    SetConsoleTitleA("VAULTED - Waiting for CS2");
+    std::cout << "[*] Waiting for cs2.exe to open..." << std::endl;
 
-	    if (ProcessMgr.Attach("cs2.exe") != SUCCEED)
+    // Wait until CS2 is open and we successfully attach
+    while (ProcessMgr.Attach("cs2.exe") != SUCCEED)
     {
-        std::cout << "Failed to attach to cs2.exe" << std::endl;
+        Sleep(1000);
+    }
+
+    std::cout << "[+] Successfully attached to cs2.exe!" << std::endl;
+    std::cout << "[*] Initializing offsets..." << std::endl;
+
+    // Get the base address of client.dll
+    DWORD64 clientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
+    if (!clientDLL)
+    {
+        std::cout << "[-] Failed to get client.dll base." << std::endl;
+        std::cin.get();
         return 1;
     }
-	
-	if (!Offset::UpdateOffsets())
-	{
-		std::cout << "[ERROR] Failed to update offsets." << std::endl;
-		goto END;
-	}
 
-	if (!gGame.InitAddress())
-	{
-		std::cout << "[ERROR] Failed to call InitAddress()."<< std::endl;
-		goto END;
-	}
+    // Manually assign the offsets so we don't need the pattern scanner
+    Offset::EntityList = clientDLL + 0x271A908;
+    Offset::Matrix = clientDLL + 0x256B020;
+    Offset::LocalPlayerController = clientDLL + 0x253CB78;
+    Offset::ViewAngle = clientDLL + 0x257BCC8;
+    Offset::LocalPlayerPawn = clientDLL + 0x2565718;
+    Offset::ForceJump = clientDLL + 0x172C4F0;
+    Offset::GlobalVar = clientDLL + 0x2230090;
+    Offset::PlantedC4 = clientDLL + 0x24CB3C0;
+    Offset::WeaponC4 = clientDLL + 0x24C9B30;
 
-	std::cout << Format("[Game] Pid:%d\n", ProcessMgr.ProcessID);
-	std::cout << Format("[Game] Client:%llX\n", gGame.GetClientDLLAddress());
+    // Call UpdateOffsets just in case any other code expects it
+    if (!Offset::UpdateOffsets())
+    {
+        std::cout << "[-] Failed to update offsets." << std::endl;
+    }
+    else
+    {
+        std::cout << "[+] Offsets applied successfully!" << std::endl;
+    }
 
-	std::cout << "Offset:" << std::endl;
-	std::cout << Format("--EntityList:%llX\n", Offset::EntityList);
-	std::cout << Format("--Matrix:%llX\n", Offset::Matrix);
-	std::cout << Format("--LocalPlayerController:%llX\n", Offset::LocalPlayerController);
-	std::cout << Format("--ViewAngles:%llX\n", Offset::ViewAngle);
-	std::cout << Format("--LocalPlayerPawn:%llX\n", Offset::LocalPlayerPawn);
-	std::cout << Format("--ForceJump:%llX\n", Offset::ForceJump);
+    std::cout << "[*] Initializing Overlay..." << std::endl;
 
+    OS_ImGui ImGui;
+    if (!ImGui.Init())
+    {
+        std::cout << "[-] Failed to initialize ImGui overlay." << std::endl;
+        std::cin.get();
+        return 1;
+    }
 
-	if (fs::exists(MenuConfig::path))
-		std::cout << "Config folder connected: "<< MenuConfig::path << std::endl;
-	else
-	{
-		if (fs::create_directory(MenuConfig::path))
-			std::cout << "Config folder created: " << MenuConfig::path << std::endl;
-		else 
-		{
-			std::cerr << "Failed to create the config directory." << std::endl;
-			goto END;
-		}
-	}
+    // Set the window title (you can change this if you want)
+    ImGui.SetWindowTitle("VAULTED");
+    
+    // Set a default window size
+    ImGui.SetWindowSize({ 800, 600 });
 
-	std::cout << "Running..." << std::endl;
+    std::cout << "[+] Overlay initialized. Press HOME to toggle the menu." << std::endl;
 
-	try
-	{
-		Gui.AttachAnotherWindow("Counter-Strike 2", "SDL_app", Cheats::Run);
-	}
-	catch (OSImGui::OSException& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
+    // Main cheat loop
+    while (true)
+    {
+        Cheats::Run();
+    }
 
-END:
-	system("pause");
-	return 0;
+    return 0;
 }
