@@ -5,61 +5,34 @@
 #include <string>
 #include <vector>
 
-inline HANDLE hProcess = nullptr;
-
 class ProcessManager
 {
 public:
-    static DWORD GetProcessId(const std::string& ProcessName)
-    {
-        std::wstring wProcessName(ProcessName.begin(), ProcessName.end());
-        DWORD ProcessId = 0;
-        HANDLE Snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (Snapshot != INVALID_HANDLE_VALUE)
-        {
-            PROCESSENTRY32W ProcessEntry{ sizeof(PROCESSENTRY32W) };
-            if (Process32FirstW(Snapshot, &ProcessEntry))
-            {
-                do
-                {
-                    if (wProcessName == ProcessEntry.szExeFile)
-                    {
-                        ProcessId = ProcessEntry.th32ProcessID;
-                        break;
-                    }
-                } while (Process32NextW(Snapshot, &ProcessEntry));
-            }
-            CloseHandle(Snapshot);
-        }
-        return ProcessId;
-    }
+    HANDLE hProcess = nullptr;
+    DWORD ProcessID = 0;
+    DWORD64 BaseAddress = 0;
+    DWORD64 ModuleSize = 0;
 
-    static DWORD64 GetModuleBase(DWORD ProcessId, const std::string& ModuleName)
+    // Original methods that VTableSearch.cpp relies on
+    DWORD64 GetModuleBase(const std::string& ModuleName);
+    DWORD64 GetModuleSize(const std::string& ModuleName);
+    
+    DWORD64 FindQWordInSections(DWORD64 Address, DWORD64 Value, DWORD64 Size);
+    DWORD64 FindVTable(DWORD64 Address, DWORD64 Size);
+    DWORD64 FindVTableInstance(DWORD64 Address, DWORD64 VTable);
+
+    // Helper to convert string without ATL
+    std::wstring StringToWString(const std::string& str)
     {
-        std::wstring wModuleName(ModuleName.begin(), ModuleName.end());
-        DWORD64 BaseAddress = 0;
-        HANDLE Snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, ProcessId);
-        if (Snapshot != INVALID_HANDLE_VALUE)
-        {
-            MODULEENTRY32W ModuleEntry{ sizeof(MODULEENTRY32W) };
-            if (Module32FirstW(Snapshot, &ModuleEntry))
-            {
-                do
-                {
-                    if (wModuleName == ModuleEntry.szModule)
-                    {
-                        BaseAddress = (DWORD64)ModuleEntry.modBaseAddr;
-                        break;
-                    }
-                } while (Module32NextW(Snapshot, &ModuleEntry));
-            }
-            CloseHandle(Snapshot);
-        }
-        return BaseAddress;
+        if (str.empty()) return std::wstring();
+        int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+        std::wstring wstrTo(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+        return wstrTo;
     }
 
     template <typename T>
-    static T ReadMemory(DWORD64 Address)
+    T ReadMemory(DWORD64 Address)
     {
         T Buffer{};
         ReadProcessMemory(hProcess, (LPCVOID)Address, &Buffer, sizeof(T), nullptr);
@@ -67,24 +40,27 @@ public:
     }
 
     template <typename T>
-    static bool ReadMemory(DWORD64 Address, T& Out)
+    bool ReadMemory(DWORD64 Address, T& Out)
     {
         return ReadProcessMemory(hProcess, (LPCVOID)Address, &Out, sizeof(T), nullptr);
     }
 
-    static bool ReadMemory(DWORD64 Address, void* Buffer, size_t Size)
+    bool ReadMemory(DWORD64 Address, void* Buffer, size_t Size)
     {
         return ReadProcessMemory(hProcess, (LPCVOID)Address, Buffer, Size, nullptr);
     }
 
     template <typename T>
-    static bool WriteMemory(DWORD64 Address, const T& Value)
+    bool WriteMemory(DWORD64 Address, const T& Value)
     {
         return WriteProcessMemory(hProcess, (LPVOID)Address, &Value, sizeof(T), nullptr);
     }
 
-    static bool WriteMemory(DWORD64 Address, const void* Buffer, size_t Size)
+    bool WriteMemory(DWORD64 Address, const void* Buffer, size_t Size)
     {
         return WriteProcessMemory(hProcess, (LPVOID)Address, Buffer, Size, nullptr);
     }
 };
+
+// Global instance used everywhere
+extern ProcessManager ProcessMgr;
