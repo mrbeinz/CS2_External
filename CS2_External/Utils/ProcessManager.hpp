@@ -6,6 +6,8 @@
 #include <vector>
 #include <cstdint>
 
+enum StatusCode { SUCCEED = 0, FAILED = 1 };
+
 class ProcessManager {
 public:
     HANDLE hProcess = nullptr;
@@ -19,10 +21,10 @@ public:
         return wstrTo;
     }
 
-    bool Attach(const std::string& processName) {
+    StatusCode Attach(const std::string& processName) {
         std::wstring wProcessName = StringToWString(processName);
         HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hSnapshot == INVALID_HANDLE_VALUE) return false;
+        if (hSnapshot == INVALID_HANDLE_VALUE) return FAILED;
         PROCESSENTRY32W pe32{ sizeof(PROCESSENTRY32W) };
         if (Process32FirstW(hSnapshot, &pe32)) {
             do {
@@ -30,12 +32,12 @@ public:
                     ProcessID = pe32.th32ProcessID;
                     hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ProcessID);
                     CloseHandle(hSnapshot);
-                    return true;
+                    return (hProcess != nullptr) ? SUCCEED : FAILED;
                 }
             } while (Process32NextW(hSnapshot, &pe32));
         }
         CloseHandle(hSnapshot);
-        return false;
+        return FAILED;
     }
 
     DWORD64 GetProcessModuleHandle(const std::string& moduleName) {
@@ -56,13 +58,22 @@ public:
         return 0;
     }
 
-    // --- Declarations ONLY. These are implemented in VTableSearch.cpp / MemorySearch.cpp ---
+    // Declarations for VTableSearch.cpp
     DWORD64 GetModuleSize(DWORD64 Address);
-    DWORD64 TraceAddress(DWORD64 Address, DWORD64 Size);
     std::vector<DWORD64> SearchMemory(const std::string& Signature, DWORD64 Start, DWORD64 Size, int Flags);
     DWORD64 FindQWordInSections(DWORD64 Address, DWORD64 Value, DWORD Size);
     DWORD64 FindVTable(DWORD64 Address, const std::string& VTableName);
     DWORD64 FindVTableInstance(DWORD64 Address, const std::string& VTableName);
+    
+    // Fixed TraceAddress for TriggerBot.cpp (accepts vector)
+    DWORD64 TraceAddress(DWORD64 Address, std::vector<DWORD> Offsets) {
+        DWORD64 current = Address;
+        for (DWORD offset : Offsets) {
+            if (!ReadProcessMemory(hProcess, (LPCVOID)current, &current, sizeof(current), nullptr)) return 0;
+            current += offset;
+        }
+        return current;
+    }
 
     template <typename T>
     T ReadMemory(DWORD64 address) {
@@ -74,6 +85,12 @@ public:
     template <typename T>
     bool ReadMemory(DWORD64 address, T& out) {
         return ReadProcessMemory(hProcess, (LPCVOID)address, &out, sizeof(T), nullptr);
+    }
+
+    // Fixed MemorySearch.cpp / VTableSearch.cpp overload
+    template <typename T>
+    bool ReadMemory(DWORD64 address, T& out, size_t size) {
+        return ReadProcessMemory(hProcess, (LPCVOID)address, &out, size, nullptr);
     }
 
     bool ReadMemory(DWORD64 address, void* buffer, size_t size) {
