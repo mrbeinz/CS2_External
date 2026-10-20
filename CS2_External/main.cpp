@@ -29,15 +29,15 @@ int main()
         return 1;
     }
 
-    // Manually assign the offsets to the exact variables hzqst expects
+    // Manually assign the offsets (Note: GlobalVars is plural here)
     Offset::Entity = clientDLL + 0x271A908;
     Offset::Matrix = clientDLL + 0x256B020;
     Offset::LocalPlayerController = clientDLL + 0x253CB78;
     Offset::ViewAngle = clientDLL + 0x257BCC8;
     Offset::LocalPlayerPawn = clientDLL + 0x2565718;
     Offset::ForceJump = clientDLL + 0x172C4F0;
-    Offset::GlobalVar = clientDLL + 0x2230090;
-    Offset::Sensitivity_Value = clientDLL + 0x0;
+    Offset::GlobalVars = clientDLL + 0x2230090;
+    Offset::Sensitivity_Value = clientDLL + 0x0; 
     Offset::PlantedC4 = clientDLL + 0x24CB3C0;
     Offset::WeaponC4 = clientDLL + 0x24C9B30;
 
@@ -50,16 +50,9 @@ int main()
         std::cout << "[+] Offsets applied successfully!" << std::endl;
     }
 
-    std::cout << "[*] Initializing Overlay..." << std::endl;
+    std::cout << "[+] Overlay ready. Press HOME to toggle the menu." << std::endl;
 
-    // Gui is the global object defined in OS-ImGui.h
-    Gui.Init();
-    Gui.SetWindowSize({ 800, 600 });
-    Gui.SetWindowTitle("VAULTED");
-    
-    std::cout << "[+] Overlay initialized. Press HOME to toggle the menu." << std::endl;
-
-    // Main cheat loop
+    // Cheats::Run() contains the ImGui render loop
     while (true)
     {
         Cheats::Run();
