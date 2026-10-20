@@ -2,7 +2,7 @@
 
 bool CGame::InitAddress()
 {
-	this->Address.ClientDLL = reinterpret_cast<DWORD64>(ProcessMgr.GetProcessModuleHandle("client.dll"));
+	DWORD64 ClientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
 	
 	this->Address.EntityList = GetClientDLLAddress() + Offset::EntityList;
 	this->Address.Matrix = GetClientDLLAddress() + Offset::Matrix;
