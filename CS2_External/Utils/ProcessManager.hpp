@@ -4,6 +4,7 @@
 #include <TlHelp32.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class ProcessManager {
 public:
@@ -55,13 +56,13 @@ public:
         return 0;
     }
 
-    // Declarations only. Let VTableSearch.cpp / MemorySearch.cpp define them.
-    DWORD64 GetModuleSize(DWORD64 address);
-    DWORD64 TraceAddress(DWORD64 address, DWORD64 size);
-    std::vector<DWORD64> SearchMemory(const std::string& signature, DWORD64 startAddress, DWORD64 size, int flags);
-    DWORD64 FindQWordInSections(DWORD64 address, DWORD64 value, DWORD size);
-    DWORD64 FindVTable(DWORD64 address, const std::string& name);
-    DWORD64 FindVTableInstance(DWORD64 address, const std::string& name);
+    // --- Declarations ONLY. These are implemented in VTableSearch.cpp / MemorySearch.cpp ---
+    DWORD64 GetModuleSize(DWORD64 Address);
+    DWORD64 TraceAddress(DWORD64 Address, DWORD64 Size);
+    std::vector<DWORD64> SearchMemory(const std::string& Signature, DWORD64 Start, DWORD64 Size, int Flags);
+    DWORD64 FindQWordInSections(DWORD64 Address, DWORD64 Value, DWORD Size);
+    DWORD64 FindVTable(DWORD64 Address, const std::string& VTableName);
+    DWORD64 FindVTableInstance(DWORD64 Address, const std::string& VTableName);
 
     template <typename T>
     T ReadMemory(DWORD64 address) {
