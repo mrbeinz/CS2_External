@@ -94,8 +94,9 @@ public:
         return ReadProcessMemory(hProcess, (LPCVOID)address, buffer, size, nullptr);
     }
 
+    // Fixed WriteMemory overloads
     template <typename T>
-    bool WriteMemory(DWORD64 address, const T& value) {
+    bool WriteMemory(DWORD64 address, T value) {
         return WriteProcessMemory(hProcess, (LPVOID)address, &value, sizeof(T), nullptr);
     }
 
