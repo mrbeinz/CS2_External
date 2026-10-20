@@ -58,14 +58,12 @@ public:
         return 0;
     }
 
-    // Declarations for VTableSearch.cpp
     DWORD64 GetModuleSize(DWORD64 Address);
     std::vector<DWORD64> SearchMemory(const std::string& Signature, DWORD64 Start, DWORD64 Size, int Flags);
     DWORD64 FindQWordInSections(DWORD64 Address, DWORD64 Value, DWORD Size);
     DWORD64 FindVTable(DWORD64 Address, const std::string& VTableName);
     DWORD64 FindVTableInstance(DWORD64 Address, const std::string& VTableName);
     
-    // Fixed TraceAddress for TriggerBot.cpp (accepts vector)
     DWORD64 TraceAddress(DWORD64 Address, std::vector<DWORD> Offsets) {
         DWORD64 current = Address;
         for (DWORD offset : Offsets) {
@@ -87,7 +85,6 @@ public:
         return ReadProcessMemory(hProcess, (LPCVOID)address, &out, sizeof(T), nullptr);
     }
 
-    // Fixed MemorySearch.cpp / VTableSearch.cpp overload
     template <typename T>
     bool ReadMemory(DWORD64 address, T& out, size_t size) {
         return ReadProcessMemory(hProcess, (LPCVOID)address, &out, size, nullptr);
