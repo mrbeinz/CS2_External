@@ -12,7 +12,7 @@ int main()
     SetConsoleTitleA("VAULTED - Waiting for CS2");
     std::cout << "[*] Waiting for cs2.exe to open..." << std::endl;
 
-    // Wait until CS2 is open and we successfully attach
+    // Wait for the game
     while (ProcessMgr.Attach("cs2.exe") != SUCCEED)
     {
         Sleep(1000);
@@ -29,15 +29,15 @@ int main()
         return 1;
     }
 
-    // Manually assign the offsets
+    // Manually assign the offsets to the exact variables hzqst expects
     Offset::Entity = clientDLL + 0x271A908;
     Offset::Matrix = clientDLL + 0x256B020;
     Offset::LocalPlayerController = clientDLL + 0x253CB78;
     Offset::ViewAngle = clientDLL + 0x257BCC8;
     Offset::LocalPlayerPawn = clientDLL + 0x2565718;
     Offset::ForceJump = clientDLL + 0x172C4F0;
-    Offset::GlobalVars = clientDLL + 0x2230090;
-    Offset::Sensitivity = clientDLL + 0x0; // Replace if needed
+    Offset::GlobalVar = clientDLL + 0x2230090;
+    Offset::Sensitivity_Value = clientDLL + 0x0;
     Offset::PlantedC4 = clientDLL + 0x24CB3C0;
     Offset::WeaponC4 = clientDLL + 0x24C9B30;
 
@@ -52,11 +52,11 @@ int main()
 
     std::cout << "[*] Initializing Overlay..." << std::endl;
 
-    // Use the global Gui object from OS-ImGui.h
+    // Gui is the global object defined in OS-ImGui.h
     Gui.Init();
-    Gui.SetWindowTitle("VAULTED");
     Gui.SetWindowSize({ 800, 600 });
-
+    Gui.SetWindowTitle("VAULTED");
+    
     std::cout << "[+] Overlay initialized. Press HOME to toggle the menu." << std::endl;
 
     // Main cheat loop
