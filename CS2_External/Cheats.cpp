@@ -4,183 +4,249 @@
 #include "Utils/ConfigMenu.hpp"
 #include "Utils/ConfigSaver.hpp"
 
+#include <Windows.h>
+#include <shellapi.h>
+
 void Cheats::Menu()
 {
 	static bool IsMenuInit = false;
 	if (!IsMenuInit)
 	{
-		ImGui::GetStyle().Colors[ImGuiCol_WindowBg].w = 0.75;
+		// --- VAULTED CUSTOM THEME ---
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.Colors[ImGuiCol_Text]                  = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
+		style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+		style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.06f, 0.06f, 0.07f, 0.95f); 
+		style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.08f, 0.08f, 0.10f, 0.95f); 
+		style.Colors[ImGuiCol_Border]                = ImVec4(0.15f, 0.15f, 0.18f, 1.00f); 
+		style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.90f, 0.20f, 0.20f, 1.00f); // Crimson
+		style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.90f, 0.20f, 0.20f, 1.00f);
+		style.Colors[ImGuiCol_Button]                = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
+		style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.20f, 0.20f, 0.25f, 1.00f);
+		style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.90f, 0.20f, 0.20f, 1.00f);
+		style.Colors[ImGuiCol_Header]                = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
+		style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.20f, 0.20f, 0.25f, 1.00f);
+		style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.90f, 0.20f, 0.20f, 1.00f);
+		style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
+		style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+
+		style.FrameBorderSize = 0.0f;
+		style.WindowRounding = 6.0f;
+		style.ChildRounding = 4.0f;
+		style.FrameRounding = 4.0f;
+		style.WindowPadding = ImVec2(0, 0);
+		style.ItemSpacing = ImVec2(8, 8);
+
 		IsMenuInit = true;
 	}
 
-	ImGui::Begin("Menu",nullptr,ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::SetNextWindowSize(ImVec2(650, 450), ImGuiCond_FirstUseEver);
+	if (ImGui::Begin("VAULTED", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))
 	{
-		ImGui::BeginTabBar("Cheat");
-		// esp menu
-		if (ImGui::BeginTabItem("ESP"))
-		{
-			Gui.MyCheckBox("Spotted", &MenuConfig::ShowSpotted);
-
-			Gui.MyCheckBox("Glow", &MenuConfig::ShowGlow);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##GlowColor", reinterpret_cast<float*>(&MenuConfig::GlowColor), ImGuiColorEditFlags_NoInputs);
-
-			Gui.MyCheckBox("BoxESP", &MenuConfig::ShowBoxESP);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##BoxColor", reinterpret_cast<float*>(&MenuConfig::BoxColor), ImGuiColorEditFlags_NoInputs);
-
-			ImGui::Combo("BoxType", &MenuConfig::BoxType, "Normal\0Dynamic");
-
-			Gui.MyCheckBox("BoneESP", &MenuConfig::ShowBoneESP);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##BoneColor", reinterpret_cast<float*>(&MenuConfig::BoneColor), ImGuiColorEditFlags_NoInputs);
-
-			Gui.MyCheckBox("EyeRay", &MenuConfig::ShowEyeRay);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##EyeRay", reinterpret_cast<float*>(&MenuConfig::EyeRayColor), ImGuiColorEditFlags_NoInputs);
-
-			Gui.MyCheckBox("HealthBar", &MenuConfig::ShowHealthBar);
-			ImGui::Combo("HealthBarType", &MenuConfig::HealthBarType, "Vetical\0Horizontal");
-
-			Gui.MyCheckBox("WeaponText", &MenuConfig::ShowWeaponESP);
-			Gui.MyCheckBox("Distance", &MenuConfig::ShowDistance);
-			Gui.MyCheckBox("PlayerName", &MenuConfig::ShowPlayerName);
-
-			Gui.MyCheckBox("HeadShootLine", &MenuConfig::ShowHeadShootLine);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##HeadShootLineColor", reinterpret_cast<float*>(&MenuConfig::HeadShootLineColor), ImGuiColorEditFlags_NoInputs);
-
-			Gui.MyCheckBox("FovLine", &MenuConfig::ShowFovLine);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##FovLineColor", reinterpret_cast<float*>(&MenuConfig::FovLineColor), ImGuiColorEditFlags_NoInputs);
-			float FovLineSizeMin = 20.f, FovLineSizeMax = 120.f;
-			Gui.SliderScalarEx1("FovLineSize", ImGuiDataType_Float, &MenuConfig::FovLineSize, &FovLineSizeMin, &FovLineSizeMax, "%.1f", ImGuiSliderFlags_None);
+		static int active_tab = 0;
 		
-			Gui.MyCheckBox("LineToEnemy", &MenuConfig::ShowLineToEnemy);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##LineToEnemyColor", reinterpret_cast<float*>(&MenuConfig::LineToEnemyColor), ImGuiColorEditFlags_NoInputs);
-
-			Gui.MyCheckBox("CrossHair", &MenuConfig::ShowCrossHair);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##CrossHairColor", reinterpret_cast<float*>(&MenuConfig::CrossHairColor), ImGuiColorEditFlags_NoInputs);
-			float CrossHairSizeMin = 15, CrossHairSizeMax = 200;
-			Gui.SliderScalarEx1("CrossHairSize", ImGuiDataType_Float, &MenuConfig::CrossHairSize, &CrossHairSizeMin, &CrossHairSizeMax, "%.1f", ImGuiSliderFlags_None);
-		
-			ImGui::EndTabItem();
-		}
-
-		// aimbot menu
-		if (ImGui::BeginTabItem("AimBot "))
+		if (ImGui::BeginChild("##main_split")) 
 		{
-			Gui.MyCheckBox("AimBot", &MenuConfig::AimBot);
+			auto size = ImGui::GetContentRegionAvail();
 
-			if (ImGui::Combo("AimKey", &MenuConfig::AimBotHotKey, "LBUTTON\0MENU\0RBUTTON\0XBUTTON1\0XBUTTON2\0CAPITAL\0SHIFT\0CONTROL"))// added LBUTTON
+			// --- SIDEBAR ---
+			ImGui::BeginChild("##tab_buttons", ImVec2(140, size.y), true);
 			{
-				AimControl::SetHotKey(MenuConfig::AimBotHotKey);
-			}
+				ImGui::SetCursorPosX(15);
+				ImGui::SetCursorPosY(20);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.20f, 0.20f, 1.0f));
+				ImGui::Text("VAULTED");
+				ImGui::PopStyleColor();
+				
+				ImGui::SetCursorPosY(35); ImGui::Separator(); ImGui::SetCursorPosY(50);
 
-			float FovMin = 0.1f, FovMax = 89.f;
-			float SmoothMin = 0.f, SmoothMax = 0.9f;
-			Gui.SliderScalarEx1("AimFov", ImGuiDataType_Float, &AimControl::AimFov, &FovMin, &FovMax, "%.1f", ImGuiSliderFlags_None);
-			Gui.MyCheckBox("FovCircle", &MenuConfig::ShowAimFovRange);
-			ImGui::SameLine();
-			ImGui::ColorEdit4("##FovCircleColor", reinterpret_cast<float*>(&MenuConfig::AimFovRangeColor), ImGuiColorEditFlags_NoInputs);
+				ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12, 8));
 
-			Gui.SliderScalarEx1("Smooth", ImGuiDataType_Float, &AimControl::Smooth, &SmoothMin, &SmoothMax, "%.1f", ImGuiSliderFlags_None);
-			if (ImGui::Combo("AimPos", &MenuConfig::AimPosition, "Head\0Neck\0Spine"))
-			{
-				switch (MenuConfig::AimPosition)
-				{
-				case 0:
-					MenuConfig::AimPositionIndex = BONEINDEX::HEAD;
-					break;
-				case 1:
-					MenuConfig::AimPositionIndex = BONEINDEX::NECK_0;
-					break;
-				case 2:
-					MenuConfig::AimPositionIndex = BONEINDEX::SPINE_1;
-					break;
-				default:
-					break;
+				auto DrawTab = [&](const char* label, int id) {
+					bool is_active = (active_tab == id);
+					if (is_active) {
+						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.90f, 0.20f, 0.20f, 1.0f));
+						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.90f, 0.20f, 0.20f, 1.0f));
+					} else {
+						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.15f, 0.18f, 1.0f));
+					}
+					if (ImGui::Button(label, ImVec2(-1, 32))) active_tab = id;
+					ImGui::PopStyleColor(2);
+				};
+
+				DrawTab("Aimbot", 0);
+				DrawTab("Visuals", 1);
+				DrawTab("Radar", 2);
+				DrawTab("TriggerBot", 3);
+				DrawTab("Misc", 4);
+
+				ImGui::PopStyleVar(2);
+
+				// Discord Button at the bottom
+				auto space = ImGui::GetContentRegionAvail().y;
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + space - 40);
+				if (ImGui::Button("Join Discord", ImVec2(-1, 30))) {
+					ShellExecuteA(NULL, "open", "https://discord.gg/yesbh5jzzA", NULL, NULL, SW_SHOWNORMAL);
 				}
 			}
-			Gui.MyCheckBox("VisibleCheck", &MenuConfig::VisibleCheck);
+			ImGui::EndChild();
 
-			//use SendInput instead of WriteMemory
-			Gui.MyCheckBox("LegitInput", &MenuConfig::LegitInput);
-		
-			ImGui::EndTabItem();
-		}
-
-		// Radar menu
-		if (ImGui::BeginTabItem("Radar "))
-		{
-			Gui.MyCheckBox("Radar", &MenuConfig::ShowRadar);
-			ImGui::Combo("RadarType", &MenuConfig::RadarType, "Circle\0Arrow\0CircleWithArrow");
-
-			Gui.MyCheckBox("CrossLine", &MenuConfig::ShowRadarCrossLine);
 			ImGui::SameLine();
-			ImGui::ColorEdit4("##CrossLineColor", reinterpret_cast<float*>(&MenuConfig::RadarCrossLineColor), ImGuiColorEditFlags_NoInputs);
 
-			float ProportionMin = 500.f, ProportionMax = 3300.f;
-			float RadarRangeMin = 100.f, RadarRangeMax = 300.f;
-			float RadarPointSizeProportionMin = 0.8f, RadarPointSizeProportionMax = 2.f;
-			Gui.SliderScalarEx1("PointSize", ImGuiDataType_Float, &MenuConfig::RadarPointSizeProportion, &RadarPointSizeProportionMin, &RadarPointSizeProportionMax, "%.1f", ImGuiSliderFlags_None);
-			Gui.SliderScalarEx1("Proportion", ImGuiDataType_Float, &MenuConfig::Proportion, &ProportionMin, &ProportionMax, "%.1f", ImGuiSliderFlags_None);
-			Gui.SliderScalarEx1("RadarRange", ImGuiDataType_Float, &MenuConfig::RadarRange, &RadarRangeMin, &RadarRangeMax, "%.1f", ImGuiSliderFlags_None);
-		
-			ImGui::EndTabItem();
-		}
-
-		// TriggerBot
-		if (ImGui::BeginTabItem("TriggerBot "))
-		{
-			Gui.MyCheckBox("TriggerBot", &MenuConfig::TriggerBot);
-
-			if (ImGui::Combo("TriggerKey", &MenuConfig::TriggerHotKey, "MENU\0RBUTTON\0XBUTTON1\0XBUTTON2\0CAPITAL\0SHIFT\0CONTROL"))
+			// --- CONTENT AREA ---
+			ImGui::BeginChild("##tab_content", ImVec2(0, size.y), true);
 			{
-				TriggerBot::SetHotKey(MenuConfig::TriggerHotKey);
+				ImGui::Dummy(ImVec2(0, 5));
+
+				if (active_tab == 0) { // AIMBOT
+					ImGui::TextColored(ImVec4(0.90f, 0.20f, 0.20f, 1.0f), "AIMBOT");
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					Gui.MyCheckBox("AimBot", &MenuConfig::AimBot);
+
+					if (ImGui::Combo("AimKey", &MenuConfig::AimBotHotKey, "LBUTTON\0MENU\0RBUTTON\0XBUTTON1\0XBUTTON2\0CAPITAL\0SHIFT\0CONTROL"))
+					{
+						AimControl::SetHotKey(MenuConfig::AimBotHotKey);
+					}
+
+					float FovMin = 0.1f, FovMax = 89.f;
+					float SmoothMin = 0.f, SmoothMax = 0.9f;
+					Gui.SliderScalarEx1("AimFov", ImGuiDataType_Float, &AimControl::AimFov, &FovMin, &FovMax, "%.1f", ImGuiSliderFlags_None);
+					
+					Gui.MyCheckBox("FovCircle", &MenuConfig::ShowAimFovRange);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##FovCircleColor", reinterpret_cast<float*>(&MenuConfig::AimFovRangeColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.SliderScalarEx1("Smooth", ImGuiDataType_Float, &AimControl::Smooth, &SmoothMin, &SmoothMax, "%.1f", ImGuiSliderFlags_None);
+					
+					if (ImGui::Combo("AimPos", &MenuConfig::AimPosition, "Head\0Neck\0Spine"))
+					{
+						switch (MenuConfig::AimPosition)
+						{
+						case 0: MenuConfig::AimPositionIndex = BONEINDEX::HEAD; break;
+						case 1: MenuConfig::AimPositionIndex = BONEINDEX::NECK_0; break;
+						case 2: MenuConfig::AimPositionIndex = BONEINDEX::SPINE_1; break;
+						}
+					}
+					
+					Gui.MyCheckBox("VisibleCheck", &MenuConfig::VisibleCheck);
+					Gui.MyCheckBox("LegitInput", &MenuConfig::LegitInput);
+				}
+				else if (active_tab == 1) { // VISUALS (ESP)
+					ImGui::TextColored(ImVec4(0.90f, 0.20f, 0.20f, 1.0f), "VISUALS");
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					Gui.MyCheckBox("Spotted", &MenuConfig::ShowSpotted);
+					Gui.MyCheckBox("Glow", &MenuConfig::ShowGlow);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##GlowColor", reinterpret_cast<float*>(&MenuConfig::GlowColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.MyCheckBox("BoxESP", &MenuConfig::ShowBoxESP);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##BoxColor", reinterpret_cast<float*>(&MenuConfig::BoxColor), ImGuiColorEditFlags_NoInputs);
+					ImGui::Combo("BoxType", &MenuConfig::BoxType, "Normal\0Dynamic");
+
+					Gui.MyCheckBox("BoneESP", &MenuConfig::ShowBoneESP);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##BoneColor", reinterpret_cast<float*>(&MenuConfig::BoneColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.MyCheckBox("EyeRay", &MenuConfig::ShowEyeRay);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##EyeRay", reinterpret_cast<float*>(&MenuConfig::EyeRayColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.MyCheckBox("HealthBar", &MenuConfig::ShowHealthBar);
+					ImGui::Combo("HealthBarType", &MenuConfig::HealthBarType, "Vetical\0Horizontal");
+
+					Gui.MyCheckBox("WeaponText", &MenuConfig::ShowWeaponESP);
+					Gui.MyCheckBox("Distance", &MenuConfig::ShowDistance);
+					Gui.MyCheckBox("PlayerName", &MenuConfig::ShowPlayerName);
+
+					Gui.MyCheckBox("HeadShootLine", &MenuConfig::ShowHeadShootLine);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##HeadShootLineColor", reinterpret_cast<float*>(&MenuConfig::HeadShootLineColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.MyCheckBox("FovLine", &MenuConfig::ShowFovLine);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##FovLineColor", reinterpret_cast<float*>(&MenuConfig::FovLineColor), ImGuiColorEditFlags_NoInputs);
+					float FovLineSizeMin = 20.f, FovLineSizeMax = 120.f;
+					Gui.SliderScalarEx1("FovLineSize", ImGuiDataType_Float, &MenuConfig::FovLineSize, &FovLineSizeMin, &FovLineSizeMax, "%.1f", ImGuiSliderFlags_None);
+				
+					Gui.MyCheckBox("LineToEnemy", &MenuConfig::ShowLineToEnemy);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##LineToEnemyColor", reinterpret_cast<float*>(&MenuConfig::LineToEnemyColor), ImGuiColorEditFlags_NoInputs);
+
+					Gui.MyCheckBox("CrossHair", &MenuConfig::ShowCrossHair);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##CrossHairColor", reinterpret_cast<float*>(&MenuConfig::CrossHairColor), ImGuiColorEditFlags_NoInputs);
+					float CrossHairSizeMin = 15, CrossHairSizeMax = 200;
+					Gui.SliderScalarEx1("CrossHairSize", ImGuiDataType_Float, &MenuConfig::CrossHairSize, &CrossHairSizeMin, &CrossHairSizeMax, "%.1f", ImGuiSliderFlags_None);
+				}
+				else if (active_tab == 2) { // RADAR
+					ImGui::TextColored(ImVec4(0.90f, 0.20f, 0.20f, 1.0f), "RADAR");
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					Gui.MyCheckBox("Radar", &MenuConfig::ShowRadar);
+					ImGui::Combo("RadarType", &MenuConfig::RadarType, "Circle\0Arrow\0CircleWithArrow");
+
+					Gui.MyCheckBox("CrossLine", &MenuConfig::ShowRadarCrossLine);
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##CrossLineColor", reinterpret_cast<float*>(&MenuConfig::RadarCrossLineColor), ImGuiColorEditFlags_NoInputs);
+
+					float ProportionMin = 500.f, ProportionMax = 3300.f;
+					float RadarRangeMin = 100.f, RadarRangeMax = 300.f;
+					float RadarPointSizeProportionMin = 0.8f, RadarPointSizeProportionMax = 2.f;
+					Gui.SliderScalarEx1("PointSize", ImGuiDataType_Float, &MenuConfig::RadarPointSizeProportion, &RadarPointSizeProportionMin, &RadarPointSizeProportionMax, "%.1f", ImGuiSliderFlags_None);
+					Gui.SliderScalarEx1("Proportion", ImGuiDataType_Float, &MenuConfig::Proportion, &ProportionMin, &ProportionMax, "%.1f", ImGuiSliderFlags_None);
+					Gui.SliderScalarEx1("RadarRange", ImGuiDataType_Float, &MenuConfig::RadarRange, &RadarRangeMin, &RadarRangeMax, "%.1f", ImGuiSliderFlags_None);
+				}
+				else if (active_tab == 3) { // TRIGGERBOT
+					ImGui::TextColored(ImVec4(0.90f, 0.20f, 0.20f, 1.0f), "TRIGGERBOT");
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					Gui.MyCheckBox("TriggerBot", &MenuConfig::TriggerBot);
+
+					if (ImGui::Combo("TriggerKey", &MenuConfig::TriggerHotKey, "MENU\0RBUTTON\0XBUTTON1\0XBUTTON2\0CAPITAL\0SHIFT\0CONTROL"))
+					{
+						TriggerBot::SetHotKey(MenuConfig::TriggerHotKey);
+					}
+					if (ImGui::Combo("TriggerMode", &MenuConfig::TriggerMode, "Hold\0Toggle"))
+					{
+						TriggerBot::SetMode(MenuConfig::TriggerMode);
+					}
+
+					DWORD TriggerDelayMin = 15, TriggerDelayMax = 170;
+					Gui.SliderScalarEx1("Delay", ImGuiDataType_U32, &TriggerBot::TriggerDelay, &TriggerDelayMin, &TriggerDelayMax, "%d", ImGuiSliderFlags_None);
+				}
+				else if (active_tab == 4) { // MISC
+					ImGui::TextColored(ImVec4(0.90f, 0.20f, 0.20f, 1.0f), "MISC");
+					ImGui::Separator();
+					ImGui::Spacing();
+
+					Gui.MyCheckBox("AntiFlashbang", &MenuConfig::AntiFlashbang);
+					Gui.MyCheckBox("TeamCheck", &MenuConfig::TeamCheck);
+					Gui.MyCheckBox("OBSBypass", &MenuConfig::OBSBypass);
+					Gui.MyCheckBox("Bunnyhop", &MenuConfig::BunnyHop);
+					Gui.MyCheckBox("ShowWhenSpec", &MenuConfig::ShowWhenSpec);
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::Spacing();
+					
+					ConfigMenu::RenderConfigMenu();
+					ImGui::TextDisabled("[HOME] Hide Menu");
+				}
 			}
-			if (ImGui::Combo("TriggerMode", &MenuConfig::TriggerMode, "Hold\0Toggle"))
-			{
-				TriggerBot::SetMode(MenuConfig::TriggerMode);
-			}
-
-			DWORD TriggerDelayMin = 15, TriggerDelayMax = 170;
-			Gui.SliderScalarEx1("Delay", ImGuiDataType_U32, &TriggerBot::TriggerDelay, &TriggerDelayMin, &TriggerDelayMax, "%d", ImGuiSliderFlags_None);
-
-			ImGui::EndTabItem();
+			ImGui::EndChild();
 		}
-
-		if (ImGui::BeginTabItem("Misc "))
-		{
-			// moved to misc
-			Gui.MyCheckBox("AntiFlashbang", &MenuConfig::AntiFlashbang);
-			// TeamCheck
-			Gui.MyCheckBox("TeamCheck", &MenuConfig::TeamCheck);
-
-			ImGui::SameLine();
-			// OBS Bypass
-			Gui.MyCheckBox("OBSBypass", &MenuConfig::OBSBypass);
-
-			//Bunnyhopping
-			Gui.MyCheckBox("Bunnyhop ", &MenuConfig::BunnyHop);
-			ImGui::SameLine();
-			Gui.MyCheckBox("ShowWhenSpec", &MenuConfig::ShowWhenSpec);
-
-			ImGui::EndTabItem();
-
-		}
-
-		// Render config saver
-		ConfigMenu::RenderConfigMenu();
-		
-		ImGui::Separator();
-
-		ImGui::Text("[HOME] HideMenu");
-
-		ImGui::EndTabBar();
-	}ImGui::End();
+		ImGui::EndChild();
+	}
+	ImGui::End();
 }
 
 void Cheats::RadarSetting(Base_Radar& Radar)
@@ -190,7 +256,6 @@ void Cheats::RadarSetting(Base_Radar& Radar)
 	ImGui::Begin("Radar", 0, ImGuiWindowFlags_NoResize);
 	ImGui::SetWindowSize({ MenuConfig::RadarRange * 2,MenuConfig::RadarRange * 2 });
 
-	// Radar.SetPos({ Gui.Window.Size.x / 2,Gui.Window.Size.y / 2 });
 	Radar.SetDrawList(ImGui::GetWindowDrawList());
 	Radar.SetPos({ ImGui::GetWindowPos().x + MenuConfig::RadarRange, ImGui::GetWindowPos().y + MenuConfig::RadarRange });
 	Radar.SetProportion(MenuConfig::Proportion);
@@ -294,16 +359,6 @@ void Cheats::Run()
 
 		if (!Entity.IsInScreen())
 			continue;
-
-		// Bone Debug
-	/*	for (int BoneIndex = 0; BoneIndex < Entity.BoneData.BonePosList.size(); BoneIndex++)
-		{
-			Vec2 ScreenPos{};
-			if (gGame.View.WorldToScreen(Entity.BoneData.BonePosList[BoneIndex].Pos, ScreenPos))
-			{
-				Gui.Text(std::to_string(BoneIndex), ScreenPos, ImColor(255, 255, 255, 255));
-			}
-		}*/
 
 		DistanceToSight = Entity.GetBone().BonePosList[BONEINDEX::HEAD].ScreenPos.DistanceTo({ Gui.Window.Size.x / 2,Gui.Window.Size.y / 2 });
 
