@@ -4,12 +4,15 @@ bool CGame::InitAddress()
 {
 	DWORD64 ClientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
 	
+	// THIS WAS MISSING: Actually assign the ClientDLL to the game struct
+	this->Address.ClientDLL = ClientDLL;
+
 	this->Address.EntityList = GetClientDLLAddress() + Offset::EntityList;
 	this->Address.Matrix = GetClientDLLAddress() + Offset::Matrix;
 	this->Address.ViewAngle = GetClientDLLAddress() + Offset::ViewAngle;
 	this->Address.LocalController = GetClientDLLAddress() + Offset::LocalPlayerController;
 	this->Address.LocalPawn = GetClientDLLAddress() + Offset::LocalPlayerPawn;
-	this->Address.ForceJump = 0;// GetClientDLLAddress() + Offset::ForceJump;
+	this->Address.ForceJump = 0; // Disabled for now, as per original
 	this->Address.GlobalVars = GetClientDLLAddress() + Offset::GlobalVars;
 	this->Address.Sensitivity = GetClientDLLAddress() + Offset::Sensitivity;
 
