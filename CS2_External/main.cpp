@@ -21,7 +21,19 @@ int main()
     std::cout << "[+] Successfully attached to cs2.exe!" << std::endl;
     std::cout << "[*] Initializing offsets..." << std::endl;
 
-    // Hardcoded offsets from your friend's dump
+    // WAIT FOR CLIENT.DLL TO LOAD
+    DWORD64 clientDLL = 0;
+    while (clientDLL == 0)
+    {
+        clientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
+        if (clientDLL == 0)
+        {
+            std::cout << "[*] Waiting for client.dll to load into memory..." << std::endl;
+            Sleep(2000);
+        }
+    }
+
+    // Hardcoded offsets
     Offset::EntityList = 0x271A908;
     Offset::Matrix = 0x256B020;
     Offset::LocalPlayerController = 0x253CB78;
@@ -49,18 +61,19 @@ int main()
     std::cout << "[+] Offsets applied successfully!" << std::endl;
     std::cout << "[*] Initializing Overlay..." << std::endl;
 
-    Gui.Init();
-    Gui.SetWindowSize({ 800, 600 });
-    Gui.SetWindowTitle("VAULTED");
+    // Use the OSImGui global instance directly
+    // The constructor handles ImGui::CreateContext() internally
+    Gui.Window.Size = { 800, 600 };
+    Gui.Window.Title = "VAULTED";
 
-    std::cout << "[+] Overlay ready. Press HOME to toggle the menu." << std::endl;
+    std::cout << "[+] Overlay ready. Press F1 to toggle the menu." << std::endl;
 
-    // THE FIX: ImGui requires NewFrame and Render
+    // Correct Loop for hzqst OS-ImGui
     while (true)
     {
-        Gui.NewFrame();     // Start drawing
-        Cheats::Run();      // Run game logic and draw menu
-        Gui.Render();       // End drawing
+        Gui.NewFrame();
+        Cheats::Run();
+        Gui.EndFrame();
     }
 
     return 0;
