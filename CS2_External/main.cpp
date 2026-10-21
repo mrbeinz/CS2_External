@@ -6,6 +6,7 @@
 #include "OS-ImGui/OS-ImGui.h"
 #include "Utils/ProcessManager.hpp"
 #include "Offsets.h"
+#include "Game.h"
 
 int main()
 {
@@ -20,41 +21,46 @@ int main()
     std::cout << "[+] Successfully attached to cs2.exe!" << std::endl;
     std::cout << "[*] Initializing offsets..." << std::endl;
 
-    DWORD64 clientDLL = ProcessMgr.GetProcessModuleHandle("client.dll");
-    if (!clientDLL)
-    {
-        std::cout << "[-] Failed to get client.dll base." << std::endl;
-        std::cin.get();
-        return 1;
-    }
-
-    // Manually assign the offsets
-    Offset::EntityList = clientDLL + 0x271A908;
-    Offset::Matrix = clientDLL + 0x256B020;
-    Offset::LocalPlayerController = clientDLL + 0x253CB78;
-    Offset::ViewAngle = clientDLL + 0x257BCC8;
-    Offset::LocalPlayerPawn = clientDLL + 0x2565718;
-    Offset::ForceJump = clientDLL + 0x172C4F0;
-    Offset::GlobalVars = clientDLL + 0x2230090;
-    Offset::Sensitivity = clientDLL + 0x0; 
-    Offset::Sensitivity_Value = clientDLL + 0x0; 
-    Offset::PlantedC4 = clientDLL + 0x24CB3C0;
-    Offset::WeaponC4 = clientDLL + 0x24C9B30;
+    // Hardcoded offsets from your friend's dump
+    Offset::EntityList = 0x271A908;
+    Offset::Matrix = 0x256B020;
+    Offset::LocalPlayerController = 0x253CB78;
+    Offset::ViewAngle = 0x257BCC8;
+    Offset::LocalPlayerPawn = 0x2565718;
+    Offset::ForceJump = 0x172C4F0;
+    Offset::GlobalVars = 0x2230090;
+    Offset::Sensitivity = 0x0; 
+    Offset::Sensitivity_Value = 0x0; 
+    Offset::PlantedC4 = 0x24CB3C0;
+    Offset::WeaponC4 = 0x24C9B30;
 
     if (!Offset::UpdateOffsets())
     {
         std::cout << "[-] Failed to update offsets." << std::endl;
     }
-    else
+    
+    if (!gGame.InitAddress())
     {
-        std::cout << "[+] Offsets applied successfully!" << std::endl;
+        std::cout << "[-] Failed to initialize game addresses." << std::endl;
+        std::cin.get();
+        return 1;
     }
+
+    std::cout << "[+] Offsets applied successfully!" << std::endl;
+    std::cout << "[*] Initializing Overlay..." << std::endl;
+
+    Gui.Init();
+    Gui.SetWindowSize({ 800, 600 });
+    Gui.SetWindowTitle("VAULTED");
 
     std::cout << "[+] Overlay ready. Press HOME to toggle the menu." << std::endl;
 
+    // THE FIX: ImGui requires NewFrame and Render
     while (true)
     {
-        Cheats::Run();
+        Gui.NewFrame();     // Start drawing
+        Cheats::Run();      // Run game logic and draw menu
+        Gui.Render();       // End drawing
     }
 
     return 0;
